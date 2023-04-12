@@ -87,64 +87,70 @@ legend('topright', c('With seasonal forcing', 'No seasonal forcing'), lty = c(1,
 ## Part 2: Set up and compare different seasonal forcing
 ########################################################################
 # School term time forcing models, without the correction
-SEIRterm <- function(time, state, parameters) {
+SEIRterm = function(time, state, parameters) {
   with(as.list(c(state, parameters)), {
     
     # real-tim beta based on school term-time forcing (uncorrected) 
-    beta= beta0 * (1 + b.term * Term[time])
+    beta = beta0*(1 + b.term*Term[time])
     
-    dS = mu*N - beta * S * I / N - mu * S
-    dE = beta * S * I / N - alpha * E - mu * E
-    dI = alpha * E - mu * I - gamma * I
+    dS = mu*N - beta*S*I/N - mu*S
+    dE = beta*S*I/N - alpha*E - mu*E
+    dI = alpha*E - mu*I - gamma*I
     
     list(c(dS, dE, dI))
   })
 }
 
 # School term time forcing models, with the correction
-SEIRterm.corrected <- function(time, state, parameters) {
+SEIRterm.corrected = function(time, state, parameters) {
   with(as.list(c(state, parameters)), {
     
-    # real-tim beta based on school term-time forcing (corrected) 
-    correction.factor=(1/365*((1+b.term)*273+(1-b.term)*92))
-    beta= beta0/correction.factor * (1 + b.term * Term[time])
+    # real-time beta based on school term-time forcing (corrected) 
+    correction.factor = (1/365*((1 + b.term)*273 + (1 - b.term)*92))
+    beta = beta0/correction.factor*(1 + b.term*Term[time])
     
-    dS = mu*N - beta * S * I / N - mu * S
-    dE = beta * S * I / N - alpha * E - mu * E
-    dI = alpha * E - mu * I - gamma * I
+    dS = mu*N - beta*S*I/N - mu*S
+    dE = beta*S*I/N - alpha*E - mu*E
+    dI = alpha*E - mu*I - gamma*I
     
     list(c(dS, dE, dI))
   })
 }
 
-
-
 ## SETTING UP THE SCHOOL TERM-TIME FUNCTION:
 # term-time forcing
-holidays=c(1:6, 100:115, 200:251, 300:307, 356:365, 0);  # the days in a year that are holiays
-times=seq(1,100*365); # in day
-Term=rep(1,length(times));  # initialize a vector to store the Term
-ind=(1:length(Term) %% 365) %in% holidays  # find those days that are school holidays
-Term[ind]=-1; # set them to -1
-
-
+holidays = c(1:6, 100:115, 200:251, 300:307, 356:365, 0);  # the days in a year that are holidays
+times = seq(1, 100*365); # in day
+Term = rep(1, length(times));  # initialize a vector to store the Term
+ind = (1:length(Term) %% 365) %in% holidays  # find those days that are school holidays
+Term[ind] = -1; # set them to -1
 
 # Parameters and initial conditions:
-N=1; # Note the state variables (N, S, E, I, etc) here are fractions, e.g. here 1=100%
-S0=6e-2*N; E0=I0=1e-5*N
-state=c(S=S0, E=E0,I=I0);
+N = 1; # Note the state variables (N, S, E, I, etc) here are fractions, e.g. here 1=100%
+S0 = 6e-2*N; 
+E0 = I0 = 1e-5*N
 
-beta0=3; b.term=.5;
-alpha=1/8; gamma=1/5; mu=1/50/365; 
+state = c(S = S0, E = E0, I = I0);
 
+beta0 = 3; 
+b.term = 0.5;
+alpha = 1/8; 
+gamma = 1/5; 
+mu = 1/50/365; 
+
+parmsTerm = c(beta0 = beta0, b.term = b.term, alpha = alpha, gamma = gamma, mu = mu);
+
+###[LQ3] What is beta for Day 1, Day 12, and Day 50, respectively?
+Term[50]
+beta_Day1 = beta0*(1 + b.term*Term[1])
+beta_Day12 = beta0*(1 + b.term*Term[12])
+beta_Day50 = beta0*(1 + b.term*Term[50])
 
 # Run the uncorrected school term-time forcing
-parmsTerm=c(beta0=beta0,b.term=b.term,alpha=alpha,gamma=gamma,mu=mu);
-simTerm=ode(y=state,times=times,func=SEIRterm,parms=parmsTerm)
+simTerm = ode(y = state, times = times, func = SEIRterm, parms = parmsTerm)
 
 # Run the corrected school term-time forcing
-parmsTerm=c(beta0=beta0,b.term=b.term,alpha=alpha,gamma=gamma,mu=mu);
-simTermCorrected=ode(y=state,times=times,func=SEIRterm.corrected,parms=parmsTerm)
+simTermCorrected = ode(y = state, times = times, func = SEIRterm.corrected, parms = parmsTerm)
 
 # Run the Sinusiodal function:
 omega=2*pi/365; 
